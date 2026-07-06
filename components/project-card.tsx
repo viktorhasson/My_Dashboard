@@ -22,13 +22,7 @@ export function ProjectCard({
     <Card className="flex flex-col justify-between">
       <CardHeader className="flex-row items-start justify-between space-y-0">
         <Link href={`/projects/${project.id}`} className="flex-1">
-          <div className="flex items-center gap-2">
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ backgroundColor: project.color }}
-            />
-            <CardTitle>{project.name}</CardTitle>
-          </div>
+          <CardTitle>{project.name}</CardTitle>
           {project.description && (
             <p className="mt-1 line-clamp-2 text-xs text-neutral-500">{project.description}</p>
           )}

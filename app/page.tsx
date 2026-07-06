@@ -31,8 +31,11 @@ export default async function DashboardPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <Link href="/projects" className="text-sm text-indigo-600 hover:underline dark:text-indigo-400">
+        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <Link
+          href="/projects"
+          className="text-sm text-neutral-500 underline-offset-4 hover:text-neutral-900 hover:underline dark:hover:text-white"
+        >
           View projects &rarr;
         </Link>
       </div>

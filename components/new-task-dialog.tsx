@@ -39,7 +39,7 @@ export function NewTaskDialog({ projectId }: { projectId: string }) {
             <select
               name="priority"
               defaultValue="medium"
-              className="h-9 flex-1 rounded-md border border-neutral-300 bg-white px-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              className="h-9 flex-1 rounded-md border border-neutral-300 bg-white px-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>

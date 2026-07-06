@@ -42,7 +42,7 @@ export function AttachmentSection({
       <div className="flex flex-col gap-2">
         {attachments.length === 0 && <p className="text-xs text-neutral-500">No files attached.</p>}
         {attachments.map((attachment) => (
-          <div key={attachment.id} className="flex items-center justify-between rounded-md bg-neutral-100 p-2 text-sm dark:bg-neutral-800">
+          <div key={attachment.id} className="flex items-center justify-between rounded-md border border-neutral-200 p-2 text-sm dark:border-neutral-800">
             <span className="flex items-center gap-2">
               <Paperclip className="h-3.5 w-3.5" />
               {attachment.file_name}

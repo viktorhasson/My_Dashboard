@@ -41,7 +41,7 @@ function Column({
       ref={setNodeRef}
       className={`flex min-h-[200px] w-72 shrink-0 flex-col gap-2 rounded-lg border p-3 transition-colors ${
         isOver
-          ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/20"
+          ? "border-neutral-900 bg-neutral-50 dark:border-neutral-100 dark:bg-neutral-900"
           : "border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950"
       }`}
     >

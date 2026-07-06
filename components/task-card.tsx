@@ -24,7 +24,7 @@ export function TaskCard({ task, projectId }: { task: Task; projectId: string })
       <Link href={`/projects/${projectId}/tasks/${task.id}`}>
         <Card
           className={cn(
-            "cursor-grab p-3 hover:border-indigo-300 active:cursor-grabbing dark:hover:border-indigo-700",
+            "cursor-grab p-3 hover:border-neutral-400 active:cursor-grabbing dark:hover:border-neutral-500",
             isDragging && "opacity-50"
           )}
         >

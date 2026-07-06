@@ -34,7 +34,7 @@ export function TimeSection({
       <div className="flex flex-col gap-2">
         {entries.length === 0 && <p className="text-xs text-neutral-500">No time logged yet.</p>}
         {entries.map((entry) => (
-          <div key={entry.id} className="flex items-center justify-between rounded-md bg-neutral-100 p-2 text-sm dark:bg-neutral-800">
+          <div key={entry.id} className="flex items-center justify-between rounded-md border border-neutral-200 p-2 text-sm dark:border-neutral-800">
             <span>{entry.duration_minutes} min{entry.note ? ` — ${entry.note}` : ""}</span>
             <span className="text-xs text-neutral-500">{new Date(entry.logged_at).toLocaleDateString()}</span>
           </div>

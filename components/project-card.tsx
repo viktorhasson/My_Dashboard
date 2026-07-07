@@ -5,6 +5,7 @@ import { useTransition } from "react";
 import { Archive, ArchiveRestore } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { setProjectStatus } from "@/app/projects/actions";
 import type { Project } from "@/lib/supabase/types";
 
@@ -16,7 +17,30 @@ export function ProjectCard({
   openCount: number;
 }) {
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
   const archived = project.status === "archived";
+
+  function changeStatus(status: "active" | "archived", { undoable }: { undoable: boolean }) {
+    startTransition(async () => {
+      try {
+        await setProjectStatus(project.id, status);
+        toast(
+          status === "archived" ? "Project archived" : "Project restored",
+          undoable
+            ? {
+                label: "Undo",
+                onClick: () =>
+                  changeStatus(status === "archived" ? "active" : "archived", {
+                    undoable: false,
+                  }),
+              }
+            : undefined
+        );
+      } catch {
+        toast("Failed to update project");
+      }
+    });
+  }
 
   return (
     <Card className="flex flex-col justify-between">
@@ -31,9 +55,7 @@ export function ProjectCard({
           variant="ghost"
           size="icon"
           disabled={pending}
-          onClick={() =>
-            startTransition(() => setProjectStatus(project.id, archived ? "active" : "archived"))
-          }
+          onClick={() => changeStatus(archived ? "active" : "archived", { undoable: true })}
           title={archived ? "Restore project" : "Archive project"}
         >
           {archived ? <ArchiveRestore className="h-4 w-4" /> : <Archive className="h-4 w-4" />}

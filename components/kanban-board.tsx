@@ -14,6 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { TaskCard } from "@/components/task-card";
+import { useToast } from "@/components/ui/toast";
 import { createTask, updateTaskStatus } from "@/app/projects/[id]/tasks/actions";
 import type { Task, TaskStatus } from "@/lib/supabase/types";
 
@@ -64,11 +65,16 @@ function Column({
 function QuickAddTask({ projectId, status }: { projectId: string; status: TaskStatus }) {
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await createTask(projectId, formData);
-      formRef.current?.reset();
+      try {
+        await createTask(projectId, formData);
+        formRef.current?.reset();
+      } catch {
+        toast("Failed to add task");
+      }
     });
   }
 
@@ -98,6 +104,7 @@ export function KanbanBoard({ projectId, initialTasks }: { projectId: string; in
     setTasks(initialTasks);
   }
   const [, startTransition] = useTransition();
+  const toast = useToast();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 
   const columns = useMemo(() => {
@@ -125,12 +132,18 @@ export function KanbanBoard({ projectId, initialTasks }: { projectId: string; in
 
     if (!overStatus || overStatus === activeTaskItem.status) return;
 
+    const previousTasks = tasks;
     setTasks((prev) =>
       prev.map((t) => (t.id === activeTaskItem.id ? { ...t, status: overStatus } : t))
     );
 
-    startTransition(() => {
-      updateTaskStatus(activeTaskItem.id, projectId, overStatus);
+    startTransition(async () => {
+      try {
+        await updateTaskStatus(activeTaskItem.id, projectId, overStatus);
+      } catch {
+        setTasks(previousTasks);
+        toast("Failed to move task");
+      }
     });
   }
 

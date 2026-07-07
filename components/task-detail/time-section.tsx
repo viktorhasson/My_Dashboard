@@ -3,6 +3,7 @@
 import { useRef, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { logTime } from "@/app/projects/[id]/tasks/[taskId]/actions";
 import type { TimeEntry } from "@/lib/supabase/types";
 
@@ -19,10 +20,16 @@ export function TimeSection({
   const formRef = useRef<HTMLFormElement>(null);
   const totalMinutes = entries.reduce((sum, e) => sum + e.duration_minutes, 0);
 
+  const toast = useToast();
+
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await logTime(taskId, projectId, formData);
-      formRef.current?.reset();
+      try {
+        await logTime(taskId, projectId, formData);
+        formRef.current?.reset();
+      } catch {
+        toast("Failed to log time");
+      }
     });
   }
 

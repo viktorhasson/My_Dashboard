@@ -3,6 +3,7 @@
 import { useRef, useTransition } from "react";
 import { Paperclip, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { uploadAttachment, getAttachmentUrl } from "@/app/projects/[id]/tasks/[taskId]/actions";
 import type { Attachment } from "@/lib/supabase/types";
 
@@ -24,16 +25,27 @@ export function AttachmentSection({
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
 
+  const toast = useToast();
+
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await uploadAttachment(taskId, projectId, formData);
-      formRef.current?.reset();
+      try {
+        await uploadAttachment(taskId, projectId, formData);
+        formRef.current?.reset();
+        toast("File uploaded");
+      } catch {
+        toast("Failed to upload file");
+      }
     });
   }
 
   async function handleDownload(storagePath: string) {
-    const url = await getAttachmentUrl(storagePath);
-    window.open(url, "_blank");
+    try {
+      const url = await getAttachmentUrl(storagePath);
+      window.open(url, "_blank");
+    } catch {
+      toast("Failed to open file");
+    }
   }
 
   return (

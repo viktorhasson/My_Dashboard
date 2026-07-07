@@ -3,6 +3,7 @@
 import { useRef, useTransition } from "react";
 import { Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { addComment } from "@/app/projects/[id]/tasks/[taskId]/actions";
 import type { Comment } from "@/lib/supabase/types";
 
@@ -17,11 +18,16 @@ export function CommentSection({
 }) {
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await addComment(taskId, projectId, formData);
-      formRef.current?.reset();
+      try {
+        await addComment(taskId, projectId, formData);
+        formRef.current?.reset();
+      } catch {
+        toast("Failed to post comment");
+      }
     });
   }
 

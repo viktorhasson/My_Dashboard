@@ -5,18 +5,25 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/toast";
 import { createProject } from "@/app/projects/actions";
 
 export function NewProjectDialog() {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await createProject(formData);
-      formRef.current?.reset();
-      setOpen(false);
+      try {
+        await createProject(formData);
+        formRef.current?.reset();
+        setOpen(false);
+        toast("Project created");
+      } catch {
+        toast("Failed to create project");
+      }
     });
   }
 

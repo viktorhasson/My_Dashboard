@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/toast";
 import { getActiveProjects } from "@/app/projects/actions";
 import { createTask } from "@/app/projects/[id]/tasks/actions";
 
@@ -14,6 +15,7 @@ export function QuickTaskDialog() {
   const [projects, setProjects] = useState<{ id: string; name: string }[] | null>(null);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   useEffect(() => {
     if (open) getActiveProjects().then(setProjects);
@@ -22,10 +24,16 @@ export function QuickTaskDialog() {
   function handleSubmit(formData: FormData) {
     const projectId = String(formData.get("project_id") ?? "");
     if (!projectId) return;
+    const projectName = projects?.find((p) => p.id === projectId)?.name;
     startTransition(async () => {
-      await createTask(projectId, formData);
-      formRef.current?.reset();
-      setOpen(false);
+      try {
+        await createTask(projectId, formData);
+        formRef.current?.reset();
+        setOpen(false);
+        toast(projectName ? `Task added to ${projectName}` : "Task added");
+      } catch {
+        toast("Failed to add task");
+      }
     });
   }
 

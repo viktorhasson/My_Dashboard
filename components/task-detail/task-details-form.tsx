@@ -3,14 +3,23 @@
 import { useTransition } from "react";
 import { Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { updateTaskDetails } from "@/app/projects/[id]/tasks/[taskId]/actions";
 import type { Task } from "@/lib/supabase/types";
 
 export function TaskDetailsForm({ task, projectId }: { task: Task; projectId: string }) {
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function handleSubmit(formData: FormData) {
-    startTransition(() => updateTaskDetails(task.id, projectId, formData));
+    startTransition(async () => {
+      try {
+        await updateTaskDetails(task.id, projectId, formData);
+        toast("Changes saved");
+      } catch {
+        toast("Failed to save changes");
+      }
+    });
   }
 
   return (

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Sidebar } from "@/components/sidebar";
+import { MobileHeader, MobileBottomNav } from "@/components/mobile-nav";
 import { Toaster } from "@/components/ui/toast";
 import "./globals.css";
 
@@ -32,7 +33,11 @@ export default function RootLayout({
       <body className="flex min-h-full">
         <Toaster>
           <Sidebar />
-          <main className="flex-1 overflow-x-hidden p-6">{children}</main>
+          <div className="flex min-h-full flex-1 flex-col">
+            <MobileHeader />
+            <main className="flex-1 overflow-x-hidden p-4 pb-24 md:p-6 md:pb-6">{children}</main>
+          </div>
+          <MobileBottomNav />
         </Toaster>
       </body>
     </html>

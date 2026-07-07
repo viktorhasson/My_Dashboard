@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/toast";
 import { getActiveProjects } from "@/app/projects/actions";
 import { createTask } from "@/app/projects/[id]/tasks/actions";
 
-export function QuickTaskDialog() {
+export function QuickTaskDialog({ trigger }: { trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [projects, setProjects] = useState<{ id: string; name: string }[] | null>(null);
   const [pending, startTransition] = useTransition();
@@ -40,10 +40,12 @@ export function QuickTaskDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="mt-6 w-full">
-          <Plus className="h-4 w-4" />
-          New task
-        </Button>
+        {trigger ?? (
+          <Button variant="outline" size="sm" className="w-full justify-start">
+            <Plus className="h-4 w-4" />
+            New task
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>

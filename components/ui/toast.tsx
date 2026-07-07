@@ -41,7 +41,7 @@ export function Toaster({ children }: { children: React.ReactNode }) {
       <div
         role="status"
         aria-live="polite"
-        className="fixed bottom-4 right-4 z-[60] flex flex-col items-end gap-2"
+        className="fixed bottom-20 right-4 z-[60] flex flex-col items-end gap-2 md:bottom-4"
       >
         {toasts.map((item) => (
           <div

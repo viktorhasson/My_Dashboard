@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, FolderKanban, BarChart3 } from "lucide-react";
 import { QuickTaskDialog } from "@/components/quick-task-dialog";
+import { SearchDialog } from "@/components/search-dialog";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -16,7 +17,7 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col border-r border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-950">
+    <aside className="hidden w-56 shrink-0 flex-col border-r border-neutral-200 bg-white p-4 md:flex dark:border-neutral-800 dark:bg-neutral-950">
       <div className="mb-6 px-2 text-lg font-semibold tracking-tight">My Dashboard</div>
       <nav className="flex flex-col gap-1">
         {links.map(({ href, label, icon: Icon }) => {
@@ -38,7 +39,10 @@ export function Sidebar() {
           );
         })}
       </nav>
-      <QuickTaskDialog />
+      <div className="mt-6 flex flex-col gap-2">
+        <SearchDialog enableHotkey />
+        <QuickTaskDialog />
+      </div>
     </aside>
   );
 }

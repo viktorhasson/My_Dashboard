@@ -27,15 +27,18 @@ export default async function ProjectsPage() {
         <NewProjectDialog />
       </div>
 
-      {active.length === 0 && (
-        <p className="text-sm text-neutral-500">No projects yet — create your first one above.</p>
+      {active.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed border-neutral-300 py-16 dark:border-neutral-700">
+          <p className="text-sm text-neutral-500">No projects yet.</p>
+          <NewProjectDialog />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {active.map((project) => (
+            <ProjectCard key={project.id} project={project} openCount={openCounts.get(project.id) ?? 0} />
+          ))}
+        </div>
       )}
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {active.map((project) => (
-          <ProjectCard key={project.id} project={project} openCount={openCounts.get(project.id) ?? 0} />
-        ))}
-      </div>
 
       {archived.length > 0 && (
         <div className="flex flex-col gap-4">

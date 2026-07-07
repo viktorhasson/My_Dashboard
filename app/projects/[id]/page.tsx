@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { KanbanBoard } from "@/components/kanban-board";
 import { NewTaskDialog } from "@/components/new-task-dialog";
 
@@ -22,6 +23,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
   return (
     <div className="flex flex-col gap-6">
+      <Breadcrumbs items={[{ label: "Projects", href: "/projects" }, { label: project.name }]} />
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">{project.name}</h1>
         <NewTaskDialog projectId={project.id} />

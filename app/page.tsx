@@ -23,9 +23,9 @@ export default async function DashboardPage() {
   const weekMinutes = (weekTime ?? []).reduce((sum, e) => sum + e.duration_minutes, 0);
 
   const stats = [
-    { label: "Active projects", value: projects?.length ?? 0 },
-    { label: "Open tasks", value: openTasks?.length ?? 0 },
-    { label: "Hours logged this week", value: (weekMinutes / 60).toFixed(1) },
+    { label: "Active projects", value: projects?.length ?? 0, href: "/projects" },
+    { label: "Open tasks", value: openTasks?.length ?? 0, href: "/projects" },
+    { label: "Hours logged this week", value: (weekMinutes / 60).toFixed(1), href: "/reports" },
   ];
 
   return (
@@ -42,12 +42,14 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         {stats.map((stat) => (
-          <Card key={stat.label}>
-            <CardHeader>
-              <CardTitle className="text-neutral-500">{stat.label}</CardTitle>
-            </CardHeader>
-            <CardContent className="text-2xl font-semibold">{stat.value}</CardContent>
-          </Card>
+          <Link key={stat.label} href={stat.href}>
+            <Card className="h-full transition-colors hover:border-neutral-400 dark:hover:border-neutral-600">
+              <CardHeader>
+                <CardTitle className="text-neutral-500">{stat.label}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-2xl font-semibold">{stat.value}</CardContent>
+            </Card>
+          </Link>
         ))}
       </div>
 

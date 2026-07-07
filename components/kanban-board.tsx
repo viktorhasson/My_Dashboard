@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -14,7 +14,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { TaskCard } from "@/components/task-card";
-import { updateTaskStatus } from "@/app/projects/[id]/tasks/actions";
+import { createTask, updateTaskStatus } from "@/app/projects/[id]/tasks/actions";
 import type { Task, TaskStatus } from "@/lib/supabase/types";
 
 const COLUMNS: { id: TaskStatus; label: string }[] = [
@@ -56,13 +56,47 @@ function Column({
           ))}
         </div>
       </SortableContext>
+      <QuickAddTask projectId={projectId} status={status} />
     </div>
+  );
+}
+
+function QuickAddTask({ projectId, status }: { projectId: string; status: TaskStatus }) {
+  const [pending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      await createTask(projectId, formData);
+      formRef.current?.reset();
+    });
+  }
+
+  return (
+    <form ref={formRef} action={handleSubmit} className="mt-auto pt-1">
+      <input type="hidden" name="status" value={status} />
+      <input
+        name="title"
+        required
+        disabled={pending}
+        placeholder={pending ? "Adding..." : "+ Add task"}
+        className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm placeholder:text-neutral-400 hover:border-neutral-300 focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:hover:border-neutral-700 dark:focus:border-neutral-600 dark:focus:bg-neutral-950"
+      />
+    </form>
   );
 }
 
 export function KanbanBoard({ projectId, initialTasks }: { projectId: string; initialTasks: Task[] }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  // Server actions revalidate the page and stream down fresh props (e.g. a
+  // task added via quick-add); sync them into the optimistic local state.
+  const [prevInitialTasks, setPrevInitialTasks] = useState(initialTasks);
+  if (prevInitialTasks !== initialTasks) {
+    setPrevInitialTasks(initialTasks);
+    setTasks(initialTasks);
+  }
   const [, startTransition] = useTransition();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
 

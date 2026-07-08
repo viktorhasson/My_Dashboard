@@ -5,18 +5,25 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/toast";
 import { createTask } from "@/app/projects/[id]/tasks/actions";
 
 export function NewTaskDialog({ projectId }: { projectId: string }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await createTask(projectId, formData);
-      formRef.current?.reset();
-      setOpen(false);
+      try {
+        await createTask(projectId, formData);
+        formRef.current?.reset();
+        setOpen(false);
+        toast("Task added");
+      } catch {
+        toast("Failed to add task");
+      }
     });
   }
 
@@ -39,7 +46,7 @@ export function NewTaskDialog({ projectId }: { projectId: string }) {
             <select
               name="priority"
               defaultValue="medium"
-              className="h-9 flex-1 rounded-md border border-neutral-300 bg-white px-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+              className="h-9 flex-1 rounded-md border border-neutral-300 bg-white px-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
             >
               <option value="low">Low</option>
               <option value="medium">Medium</option>

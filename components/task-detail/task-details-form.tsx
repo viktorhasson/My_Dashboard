@@ -3,14 +3,23 @@
 import { useTransition } from "react";
 import { Input, Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { updateTaskDetails } from "@/app/projects/[id]/tasks/[taskId]/actions";
 import type { Task } from "@/lib/supabase/types";
 
 export function TaskDetailsForm({ task, projectId }: { task: Task; projectId: string }) {
   const [pending, startTransition] = useTransition();
+  const toast = useToast();
 
   function handleSubmit(formData: FormData) {
-    startTransition(() => updateTaskDetails(task.id, projectId, formData));
+    startTransition(async () => {
+      try {
+        await updateTaskDetails(task.id, projectId, formData);
+        toast("Changes saved");
+      } catch {
+        toast("Failed to save changes");
+      }
+    });
   }
 
   return (
@@ -21,7 +30,7 @@ export function TaskDetailsForm({ task, projectId }: { task: Task; projectId: st
         <select
           name="priority"
           defaultValue={task.priority}
-          className="h-9 flex-1 rounded-md border border-neutral-300 bg-white px-2 text-sm dark:border-neutral-700 dark:bg-neutral-900"
+          className="h-9 flex-1 rounded-md border border-neutral-300 bg-white px-2 text-sm dark:border-neutral-700 dark:bg-neutral-950"
         >
           <option value="low">Low</option>
           <option value="medium">Medium</option>

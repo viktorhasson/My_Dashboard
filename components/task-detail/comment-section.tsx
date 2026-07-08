@@ -3,6 +3,7 @@
 import { useRef, useTransition } from "react";
 import { Textarea } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { addComment } from "@/app/projects/[id]/tasks/[taskId]/actions";
 import type { Comment } from "@/lib/supabase/types";
 
@@ -17,11 +18,16 @@ export function CommentSection({
 }) {
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await addComment(taskId, projectId, formData);
-      formRef.current?.reset();
+      try {
+        await addComment(taskId, projectId, formData);
+        formRef.current?.reset();
+      } catch {
+        toast("Failed to post comment");
+      }
     });
   }
 
@@ -31,7 +37,7 @@ export function CommentSection({
       <div className="flex flex-col gap-2">
         {comments.length === 0 && <p className="text-xs text-neutral-500">No comments yet.</p>}
         {comments.map((comment) => (
-          <div key={comment.id} className="rounded-md bg-neutral-100 p-2 text-sm dark:bg-neutral-800">
+          <div key={comment.id} className="rounded-md border border-neutral-200 p-2 text-sm dark:border-neutral-800">
             <p>{comment.body}</p>
             <p className="mt-1 text-xs text-neutral-500">
               {new Date(comment.created_at).toLocaleString()}

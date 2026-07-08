@@ -5,12 +5,18 @@ import { supabaseServer } from "@/lib/supabase/server";
 import { logActivity } from "@/lib/activity";
 import type { TaskStatus } from "@/lib/supabase/types";
 
+const TASK_STATUSES: TaskStatus[] = ["todo", "in_progress", "done"];
+
 export async function createTask(projectId: string, formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim() || null;
   const priority = String(formData.get("priority") ?? "medium");
   const assignee = String(formData.get("assignee") ?? "").trim() || null;
   const dueDate = String(formData.get("due_date") ?? "") || null;
+  const statusRaw = String(formData.get("status") ?? "todo");
+  const status = TASK_STATUSES.includes(statusRaw as TaskStatus)
+    ? (statusRaw as TaskStatus)
+    : "todo";
 
   if (!title) throw new Error("Task title is required");
 
@@ -18,7 +24,7 @@ export async function createTask(projectId: string, formData: FormData) {
     .from("tasks")
     .select("id", { count: "exact", head: true })
     .eq("project_id", projectId)
-    .eq("status", "todo");
+    .eq("status", status);
 
   const { data, error } = await supabaseServer
     .from("tasks")
@@ -26,6 +32,7 @@ export async function createTask(projectId: string, formData: FormData) {
       project_id: projectId,
       title,
       description,
+      status,
       priority: priority as "low" | "medium" | "high",
       assignee,
       due_date: dueDate,
@@ -60,6 +67,7 @@ export async function updateTaskStatus(taskId: string, projectId: string, status
   });
 
   revalidatePath(`/projects/${projectId}`);
+  revalidatePath(`/projects/${projectId}/tasks/${taskId}`);
   revalidatePath("/");
   revalidatePath("/reports");
 }

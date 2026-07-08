@@ -29,6 +29,17 @@ export async function createProject(formData: FormData) {
   revalidatePath("/");
 }
 
+export async function getActiveProjects() {
+  const { data, error } = await supabaseServer
+    .from("projects")
+    .select("id, name")
+    .eq("status", "active")
+    .order("name");
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
 export async function setProjectStatus(projectId: string, status: "active" | "archived") {
   const { error } = await supabaseServer
     .from("projects")

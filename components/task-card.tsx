@@ -14,6 +14,11 @@ export function TaskCard({ task, projectId }: { task: Task; projectId: string })
     id: task.id,
   });
 
+  const overdue =
+    task.status !== "done" &&
+    task.due_date !== null &&
+    new Date(`${task.due_date}T23:59:59`) < new Date();
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -24,7 +29,7 @@ export function TaskCard({ task, projectId }: { task: Task; projectId: string })
       <Link href={`/projects/${projectId}/tasks/${task.id}`}>
         <Card
           className={cn(
-            "cursor-grab p-3 hover:border-indigo-300 active:cursor-grabbing dark:hover:border-indigo-700",
+            "cursor-grab p-3 hover:border-neutral-400 active:cursor-grabbing dark:hover:border-neutral-500",
             isDragging && "opacity-50"
           )}
         >
@@ -35,7 +40,14 @@ export function TaskCard({ task, projectId }: { task: Task; projectId: string })
               <span className="text-xs text-neutral-500">{task.assignee}</span>
             )}
             {task.due_date && (
-              <span className="flex items-center gap-1 text-xs text-neutral-500">
+              <span
+                className={cn(
+                  "flex items-center gap-1 text-xs",
+                  overdue
+                    ? "rounded-full bg-neutral-900 px-1.5 py-0.5 font-medium text-white dark:bg-white dark:text-neutral-900"
+                    : "text-neutral-500"
+                )}
+              >
                 <CalendarDays className="h-3 w-3" />
                 {new Date(task.due_date).toLocaleDateString()}
               </span>

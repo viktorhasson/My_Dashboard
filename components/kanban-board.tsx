@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -14,8 +14,10 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { TaskCard } from "@/components/task-card";
-import { updateTaskStatus } from "@/app/projects/[id]/tasks/actions";
-import type { Task, TaskStatus } from "@/lib/supabase/types";
+import { useToast } from "@/components/ui/toast";
+import { createTask, updateTaskStatus } from "@/app/projects/[id]/tasks/actions";
+import { cn } from "@/lib/utils";
+import type { Task, TaskPriority, TaskStatus } from "@/lib/supabase/types";
 
 const COLUMNS: { id: TaskStatus; label: string }[] = [
   { id: "todo", label: "To Do" },
@@ -41,7 +43,7 @@ function Column({
       ref={setNodeRef}
       className={`flex min-h-[200px] w-72 shrink-0 flex-col gap-2 rounded-lg border p-3 transition-colors ${
         isOver
-          ? "border-indigo-400 bg-indigo-50 dark:bg-indigo-950/20"
+          ? "border-neutral-900 bg-neutral-50 dark:border-neutral-100 dark:bg-neutral-900"
           : "border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950"
       }`}
     >
@@ -56,21 +58,74 @@ function Column({
           ))}
         </div>
       </SortableContext>
+      <QuickAddTask projectId={projectId} status={status} />
     </div>
+  );
+}
+
+function QuickAddTask({ projectId, status }: { projectId: string; status: TaskStatus }) {
+  const [pending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
+
+  function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      try {
+        await createTask(projectId, formData);
+        formRef.current?.reset();
+      } catch {
+        toast("Failed to add task");
+      }
+    });
+  }
+
+  return (
+    <form ref={formRef} action={handleSubmit} className="mt-auto pt-1">
+      <input type="hidden" name="status" value={status} />
+      <input
+        name="title"
+        required
+        disabled={pending}
+        placeholder={pending ? "Adding..." : "+ Add task"}
+        className="w-full rounded-md border border-transparent bg-transparent px-2 py-1.5 text-sm placeholder:text-neutral-400 hover:border-neutral-300 focus:border-neutral-400 focus:bg-white focus:outline-none disabled:opacity-50 dark:hover:border-neutral-700 dark:focus:border-neutral-600 dark:focus:bg-neutral-950"
+      />
+    </form>
   );
 }
 
 export function KanbanBoard({ projectId, initialTasks }: { projectId: string; initialTasks: Task[] }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [activeTask, setActiveTask] = useState<Task | null>(null);
+
+  // Server actions revalidate the page and stream down fresh props (e.g. a
+  // task added via quick-add); sync them into the optimistic local state.
+  const [prevInitialTasks, setPrevInitialTasks] = useState(initialTasks);
+  if (prevInitialTasks !== initialTasks) {
+    setPrevInitialTasks(initialTasks);
+    setTasks(initialTasks);
+  }
   const [, startTransition] = useTransition();
+  const toast = useToast();
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 4 } }));
+
+  const [priorityFilter, setPriorityFilter] = useState<"all" | TaskPriority>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState("all");
+
+  const assignees = useMemo(
+    () =>
+      Array.from(new Set(tasks.map((t) => t.assignee).filter((a): a is string => Boolean(a)))),
+    [tasks]
+  );
 
   const columns = useMemo(() => {
     const grouped: Record<TaskStatus, Task[]> = { todo: [], in_progress: [], done: [] };
-    for (const task of tasks) grouped[task.status].push(task);
+    for (const task of tasks) {
+      if (priorityFilter !== "all" && task.priority !== priorityFilter) continue;
+      if (assigneeFilter !== "all" && task.assignee !== assigneeFilter) continue;
+      grouped[task.status].push(task);
+    }
     return grouped;
-  }, [tasks]);
+  }, [tasks, priorityFilter, assigneeFilter]);
 
   function handleDragStart(event: DragStartEvent) {
     const task = tasks.find((t) => t.id === event.active.id);
@@ -91,30 +146,68 @@ export function KanbanBoard({ projectId, initialTasks }: { projectId: string; in
 
     if (!overStatus || overStatus === activeTaskItem.status) return;
 
+    const previousTasks = tasks;
     setTasks((prev) =>
       prev.map((t) => (t.id === activeTaskItem.id ? { ...t, status: overStatus } : t))
     );
 
-    startTransition(() => {
-      updateTaskStatus(activeTaskItem.id, projectId, overStatus);
+    startTransition(async () => {
+      try {
+        await updateTaskStatus(activeTaskItem.id, projectId, overStatus);
+      } catch {
+        setTasks(previousTasks);
+        toast("Failed to move task");
+      }
     });
   }
 
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-    >
-      <div className="flex gap-4 overflow-x-auto pb-4">
-        {COLUMNS.map((col) => (
-          <Column key={col.id} status={col.id} label={col.label} tasks={columns[col.id]} projectId={projectId} />
+    <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {(["all", "low", "medium", "high"] as const).map((priority) => (
+          <button
+            key={priority}
+            onClick={() => setPriorityFilter(priority)}
+            className={cn(
+              "rounded-full border px-2.5 py-1 text-xs font-medium capitalize transition-colors",
+              priorityFilter === priority
+                ? "border-neutral-900 bg-neutral-900 text-white dark:border-white dark:bg-white dark:text-neutral-900"
+                : "border-neutral-300 text-neutral-500 hover:text-neutral-900 dark:border-neutral-700 dark:hover:text-white"
+            )}
+          >
+            {priority}
+          </button>
         ))}
+        {assignees.length > 0 && (
+          <select
+            value={assigneeFilter}
+            onChange={(event) => setAssigneeFilter(event.target.value)}
+            className="h-7 rounded-full border border-neutral-300 bg-white px-2 text-xs text-neutral-500 dark:border-neutral-700 dark:bg-neutral-950"
+          >
+            <option value="all">All assignees</option>
+            {assignees.map((assignee) => (
+              <option key={assignee} value={assignee}>
+                {assignee}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
-      <DragOverlay>
-        {activeTask ? <TaskCard task={activeTask} projectId={projectId} /> : null}
-      </DragOverlay>
-    </DndContext>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCorners}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="flex gap-4 overflow-x-auto pb-4">
+          {COLUMNS.map((col) => (
+            <Column key={col.id} status={col.id} label={col.label} tasks={columns[col.id]} projectId={projectId} />
+          ))}
+        </div>
+        <DragOverlay>
+          {activeTask ? <TaskCard task={activeTask} projectId={projectId} /> : null}
+        </DragOverlay>
+      </DndContext>
+    </div>
   );
 }

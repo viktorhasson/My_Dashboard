@@ -5,18 +5,25 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useToast } from "@/components/ui/toast";
 import { createProject } from "@/app/projects/actions";
 
 export function NewProjectDialog() {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
   const formRef = useRef<HTMLFormElement>(null);
+  const toast = useToast();
 
   function handleSubmit(formData: FormData) {
     startTransition(async () => {
-      await createProject(formData);
-      formRef.current?.reset();
-      setOpen(false);
+      try {
+        await createProject(formData);
+        formRef.current?.reset();
+        setOpen(false);
+        toast("Project created");
+      } catch {
+        toast("Failed to create project");
+      }
     });
   }
 
@@ -35,18 +42,6 @@ export function NewProjectDialog() {
         <form ref={formRef} action={handleSubmit} className="flex flex-col gap-3">
           <Input name="name" placeholder="Project name" required />
           <Textarea name="description" placeholder="Description (optional)" rows={3} />
-          <div className="flex items-center gap-2">
-            <label htmlFor="color" className="text-sm text-neutral-500">
-              Color
-            </label>
-            <input
-              id="color"
-              name="color"
-              type="color"
-              defaultValue="#6366f1"
-              className="h-8 w-12 rounded border border-neutral-300 dark:border-neutral-700"
-            />
-          </div>
           <Button type="submit" disabled={pending} className="mt-2">
             {pending ? "Creating..." : "Create project"}
           </Button>

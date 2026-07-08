@@ -1,8 +1,23 @@
+import nextDynamic from "next/dynamic";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TimePerProjectChart, TasksCompletedChart, WorkloadChart } from "@/components/reports/reports-charts";
 
 export const dynamic = "force-dynamic";
+
+const ChartSkeleton = () => <div className="h-[280px] animate-pulse rounded-md bg-neutral-100 dark:bg-neutral-900" />;
+
+const TimePerProjectChart = nextDynamic(
+  () => import("@/components/reports/reports-charts").then((m) => m.TimePerProjectChart),
+  { loading: ChartSkeleton }
+);
+const TasksCompletedChart = nextDynamic(
+  () => import("@/components/reports/reports-charts").then((m) => m.TasksCompletedChart),
+  { loading: ChartSkeleton }
+);
+const WorkloadChart = nextDynamic(
+  () => import("@/components/reports/reports-charts").then((m) => m.WorkloadChart),
+  { loading: ChartSkeleton }
+);
 
 function startOfWeek(date: Date) {
   const d = new Date(date);
@@ -14,9 +29,9 @@ function startOfWeek(date: Date) {
 
 export default async function ReportsPage() {
   const [{ data: projects }, { data: tasks }, { data: timeEntries }] = await Promise.all([
-    supabaseServer.from("projects").select("*"),
-    supabaseServer.from("tasks").select("*"),
-    supabaseServer.from("time_entries").select("*"),
+    supabaseServer.from("projects").select("id, name"),
+    supabaseServer.from("tasks").select("id, project_id, status, assignee, updated_at"),
+    supabaseServer.from("time_entries").select("task_id, duration_minutes"),
   ]);
 
   const projectNameById = new Map((projects ?? []).map((p) => [p.id, p.name]));

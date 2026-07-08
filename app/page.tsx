@@ -8,23 +8,27 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage() {
   const weekAgo = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: projects }, { data: openTasks }, { data: weekTime }, { data: activity }] =
-    await Promise.all([
-      supabaseServer.from("projects").select("*").eq("status", "active"),
-      supabaseServer.from("tasks").select("*").neq("status", "done"),
-      supabaseServer.from("time_entries").select("*").gte("logged_at", weekAgo),
-      supabaseServer
-        .from("activity_log")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(15),
-    ]);
+  const [
+    { count: activeProjectCount },
+    { count: openTaskCount },
+    { data: weekTime },
+    { data: activity },
+  ] = await Promise.all([
+    supabaseServer.from("projects").select("id", { count: "exact", head: true }).eq("status", "active"),
+    supabaseServer.from("tasks").select("id", { count: "exact", head: true }).neq("status", "done"),
+    supabaseServer.from("time_entries").select("duration_minutes").gte("logged_at", weekAgo),
+    supabaseServer
+      .from("activity_log")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(15),
+  ]);
 
   const weekMinutes = (weekTime ?? []).reduce((sum, e) => sum + e.duration_minutes, 0);
 
   const stats = [
-    { label: "Active projects", value: projects?.length ?? 0, href: "/projects" },
-    { label: "Open tasks", value: openTasks?.length ?? 0, href: "/projects" },
+    { label: "Active projects", value: activeProjectCount ?? 0, href: "/projects" },
+    { label: "Open tasks", value: openTaskCount ?? 0, href: "/projects" },
     { label: "Hours logged this week", value: (weekMinutes / 60).toFixed(1), href: "/reports" },
   ];
 

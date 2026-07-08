@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function ProjectsPage() {
   const [{ data: projects, error }, { data: tasks }] = await Promise.all([
     supabaseServer.from("projects").select("*").order("created_at", { ascending: false }),
-    supabaseServer.from("tasks").select("*").neq("status", "done"),
+    supabaseServer.from("tasks").select("project_id").neq("status", "done"),
   ]);
 
   if (error) throw new Error(error.message);

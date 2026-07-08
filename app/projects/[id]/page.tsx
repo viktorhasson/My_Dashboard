@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation";
+import nextDynamic from "next/dynamic";
 import { supabaseServer } from "@/lib/supabase/server";
 import { Breadcrumbs } from "@/components/breadcrumbs";
-import { KanbanBoard } from "@/components/kanban-board";
 import { NewTaskDialog } from "@/components/new-task-dialog";
 
 export const dynamic = "force-dynamic";
+
+const KanbanBoard = nextDynamic(() => import("@/components/kanban-board").then((m) => m.KanbanBoard), {
+  loading: () => <div className="h-[240px] animate-pulse rounded-lg bg-neutral-100 dark:bg-neutral-900" />,
+});
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

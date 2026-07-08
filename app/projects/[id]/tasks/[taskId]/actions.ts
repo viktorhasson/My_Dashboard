@@ -40,6 +40,7 @@ export async function logTime(taskId: string, projectId: string, formData: FormD
 
   revalidatePath(`/projects/${projectId}/tasks/${taskId}`);
   revalidatePath("/reports");
+  revalidatePath("/");
 }
 
 export async function uploadAttachment(taskId: string, projectId: string, formData: FormData) {
@@ -104,4 +105,5 @@ export async function updateTaskDetails(taskId: string, projectId: string, formD
 
   revalidatePath(`/projects/${projectId}/tasks/${taskId}`);
   revalidatePath(`/projects/${projectId}`);
+  revalidatePath("/reports");
 }

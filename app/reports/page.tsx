@@ -14,9 +14,9 @@ function startOfWeek(date: Date) {
 
 export default async function ReportsPage() {
   const [{ data: projects }, { data: tasks }, { data: timeEntries }] = await Promise.all([
-    supabaseServer.from("projects").select("*"),
-    supabaseServer.from("tasks").select("*"),
-    supabaseServer.from("time_entries").select("*"),
+    supabaseServer.from("projects").select("id, name"),
+    supabaseServer.from("tasks").select("id, project_id, status, assignee, updated_at"),
+    supabaseServer.from("time_entries").select("task_id, duration_minutes"),
   ]);
 
   const projectNameById = new Map((projects ?? []).map((p) => [p.id, p.name]));
